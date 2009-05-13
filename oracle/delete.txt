@@ -1,0 +1,13 @@
+delete rec_report rr where exists
+(
+  select r.request_id,r.source_system_trade_id,r.v2_trade_id from
+  rec_report r,
+  d_trade t
+  where r.source_system_id=9 and v2_trade_id is not null and instr(v2_trade_id,'/') =0 and v1_trade_id is null and v2_trade_id=t.source_system_trade_id
+  and t.source_system_id=9
+  and t.trade_group_id in
+  (select v2_trade_id from rec_report where source_system_id=9 and v2_trade_id is not null and v1_trade_id is not null)
+  and r.request_id=rr.request_id
+  and r.source_system_trade_id = rr.source_system_trade_id
+  and r.v2_trade_id=rr.v2_trade_id
+) 

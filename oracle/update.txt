@@ -1,0 +1,72 @@
+UPDATE customer c 
+
+SET c.inactive_ind = 'Y', c.inactive_dt = TRUNC(SYSDATE)
+
+WHERE c.inactive_dt IS NULL 
+
+  AND NOT EXISTS (SELECT 1 FROM cust_order co
+
+    WHERE co.cust_nbr = c.cust_nbr 
+
+      AND co.order_dt > TRUNC(SYSDATE) -- 365);
+-------------
+UPDATE customer c 
+
+SET (c.tot_orders, c.last_order_dt) = 
+
+ (SELECT COUNT(*), MAX(co.order_dt) 
+
+  FROM cust_order co
+
+  WHERE co.cust_nbr = c.cust_nbr 
+
+    AND co.cancelled_dt IS NULL);
+
+---------------------
+UPDATE customer c SET (c.tot_orders, c.last_order_dt) = 
+
+ (SELECT c.tot_orders + COUNT(*), MAX(co.order_dt) 
+
+  FROM cust_order co
+
+  WHERE co.cust_nbr = c.cust_nbr 
+
+    AND co.cancelled_dt IS NULL
+
+    AND co.order_dt >= TRUNC(SYSDATE))
+
+WHERE c.cust_nbr IN 
+
+ (SELECT co.cust_nbr 
+
+  FROM cust_order co
+
+  WHERE co.order_dt >= TRUNC(SYSDATE) 
+
+    AND co.cancelled_dt IS NULL);
+-----------------------
+update rec_report rr
+set comments_it =
+(
+select distinct 'some text ' || d.partyshortcode || ' for org_id ' || g.creditact  as comments
+from
+table1 d,
+rec_report r,
+table2 g
+where
+d.tradeid=r.tradeid
+and exists (select 1 from accounts a where d.partyshortcode = a.SOURCE_SYSTEM_SHORTCODE and a.org_id is null)
+and d.reserved10=g.accountid
+)
+where exists (select 1
+from
+table1 d,
+rec_report r,
+table2 g
+where
+d.tradeid=r.tradeid
+and exists (select 1 from accounts a where d.partyshortcode = a.SOURCE_SYSTEM_SHORTCODE and a.org_id is null)
+and d.reserved10=g.accountid
+and rr.tradeid=r.tradeid
+) 
+-----------------------------
